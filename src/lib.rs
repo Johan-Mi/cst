@@ -12,10 +12,19 @@
 )]
 
 use codemap::Span;
+use std::ops::Range;
 
-pub struct Tree<Kind>(std::marker::PhantomData<Kind>);
+pub struct Tree<Kind> {
+    kind: Vec<Kind>,
+    span: Vec<Span>,
+    child_indices: Vec<Range<Index>>,
+    children: Vec<Node<Kind>>,
+}
 
-pub struct Node<Kind>(std::marker::PhantomData<Kind>);
+pub struct Node<Kind> {
+    index: Index,
+    typed: std::marker::PhantomData<Kind>,
+}
 
 impl<Kind> Clone for Node<Kind> {
     fn clone(&self) -> Self {
@@ -26,16 +35,20 @@ impl<Kind> Clone for Node<Kind> {
 impl<Kind> Copy for Node<Kind> {}
 
 impl<Kind> Node<Kind> {
-    pub fn kind(self, tree: &Tree<Kind>) -> Kind {
-        todo!()
+    pub fn kind(self, tree: &Tree<Kind>) -> Kind
+    where
+        Kind: Copy,
+    {
+        tree.kind[usize(self.index)]
     }
 
     pub fn span(self, tree: &Tree<Kind>) -> Span {
-        todo!()
+        tree.span[usize(self.index)]
     }
 
     pub fn children(self, tree: &Tree<Kind>) -> &[Self] {
-        todo!()
+        let range = &tree.child_indices[usize(self.index)];
+        &tree.children[usize(range.start)..usize(range.end)]
     }
 }
 
@@ -68,3 +81,12 @@ impl<Kind> Builder<Kind> {
 }
 
 pub struct Checkpoint;
+
+type Index = u32;
+
+const fn usize(index: Index) -> usize {
+    const {
+        assert!(size_of::<Index>() <= size_of::<usize>());
+    }
+    index as usize
+}
