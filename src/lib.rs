@@ -56,6 +56,11 @@ impl<Kind> Node<Kind> {
     }
 }
 
+pub struct Token<Kind> {
+    pub kind: Kind,
+    pub span: Span,
+}
+
 pub struct Builder<Kind> {
     events: Vec<Event<Kind>>,
 }
@@ -98,12 +103,12 @@ impl<Kind> Builder<Kind> {
     /// # Panics
     ///
     /// Panics if the tree is too large.
-    pub fn token(&mut self, kind: Kind, span: Span) {
+    pub fn token(&mut self) {
         assert!(self.events.len() < usize(Index::MAX));
-        self.events.push(Event::Token { span, kind });
+        self.events.push(Event::Token);
     }
 
-    pub fn build(self) -> (Tree<Kind>, Node<Kind>) {
+    pub fn build(self, tokens: &[Token<Kind>]) -> (Tree<Kind>, Node<Kind>) {
         todo!()
     }
 }
@@ -113,7 +118,7 @@ pub struct Checkpoint(Index);
 
 enum Event<Kind> {
     Open { kind: Kind },
-    Token { span: Span, kind: Kind },
+    Token,
     Close,
 }
 
