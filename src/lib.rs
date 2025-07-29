@@ -22,37 +22,39 @@ pub struct Tree<Kind> {
     kind: Vec<Kind>,
     span: Vec<Span>,
     child_indices: Vec<Range<Index>>,
-    children: Vec<Node<Kind>>,
+    children: Vec<Index>,
 }
 
-pub struct Node<Kind> {
+pub struct Node<'tree, Kind> {
     index: Index,
-    typed: core::marker::PhantomData<Kind>,
+    tree: &'tree Tree<Kind>,
 }
 
-impl<Kind> Clone for Node<Kind> {
+impl<Kind> Clone for Node<'_, Kind> {
     fn clone(&self) -> Self {
         *self
     }
 }
 
-impl<Kind> Copy for Node<Kind> {}
+impl<Kind> Copy for Node<'_, Kind> {}
 
-impl<Kind> Node<Kind> {
-    pub fn kind(self, tree: &Tree<Kind>) -> Kind
+impl<Kind> Node<'_, Kind> {
+    pub fn kind(self) -> Kind
     where
         Kind: Copy,
     {
-        tree.kind[usize(self.index)]
+        self.tree.kind[usize(self.index)]
     }
 
-    pub fn span(self, tree: &Tree<Kind>) -> Span {
-        tree.span[usize(self.index)]
+    pub fn span(self) -> Span {
+        self.tree.span[usize(self.index)]
     }
 
-    pub fn children(self, tree: &Tree<Kind>) -> &[Self] {
-        let range = &tree.child_indices[usize(self.index)];
-        &tree.children[usize(range.start)..usize(range.end)]
+    pub fn children(self) -> impl Iterator<Item = Self> {
+        let tree = self.tree;
+        let range = &self.tree.child_indices[usize(self.index)];
+        let slice = &self.tree.children[usize(range.start)..usize(range.end)];
+        slice.iter().map(|&index| Node { index, tree })
     }
 }
 
