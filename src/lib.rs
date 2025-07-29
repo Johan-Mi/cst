@@ -1,3 +1,4 @@
+#![no_std]
 #![forbid(unsafe_code)]
 #![deny(
     unused_results,
@@ -11,8 +12,11 @@
     reason = "redundant because of `unused_results`"
 )]
 
+extern crate alloc;
+
+use alloc::vec::Vec;
 use codemap::Span;
-use std::ops::Range;
+use core::ops::Range;
 
 pub struct Tree<Kind> {
     kind: Vec<Kind>,
@@ -23,7 +27,7 @@ pub struct Tree<Kind> {
 
 pub struct Node<Kind> {
     index: Index,
-    typed: std::marker::PhantomData<Kind>,
+    typed: core::marker::PhantomData<Kind>,
 }
 
 impl<Kind> Clone for Node<Kind> {
