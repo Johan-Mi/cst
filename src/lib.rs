@@ -52,27 +52,51 @@ impl<Kind> Node<Kind> {
     }
 }
 
-pub struct Builder<Kind>(std::marker::PhantomData<Kind>);
+pub struct Builder<Kind> {
+    events: Vec<Event<Kind>>,
+}
 
 impl<Kind> Builder<Kind> {
+    /// # Panics
+    ///
+    /// Panics if the tree is too large.
     pub fn start_node(&mut self, kind: Kind) {
-        todo!()
+        assert!(self.events.len() < usize(Index::MAX));
+        self.events.push(Event::Open { kind });
     }
 
+    /// # Panics
+    ///
+    /// Panics if the tree is too large.
     pub fn finish_node(&mut self) {
-        todo!()
+        assert!(self.events.len() < usize(Index::MAX));
+        self.events.push(Event::Close);
     }
 
     pub fn checkpoint(&self) -> Checkpoint {
-        todo!()
+        #[expect(
+            clippy::missing_panics_doc,
+            reason = "length is checked when pushing events"
+        )]
+        Checkpoint(self.events.len().try_into().unwrap())
     }
 
+    /// # Panics
+    ///
+    /// Panics if the tree is too large.
     pub fn finish_node_at(&mut self, checkpoint: Checkpoint, kind: Kind) {
-        todo!()
+        assert!(self.events.len() < usize(Index::MAX) - 1);
+        self.events
+            .insert(usize(checkpoint.0), Event::Open { kind });
+        self.events.push(Event::Close);
     }
 
+    /// # Panics
+    ///
+    /// Panics if the tree is too large.
     pub fn token(&mut self, kind: Kind, span: Span) {
-        todo!()
+        assert!(self.events.len() < usize(Index::MAX));
+        self.events.push(Event::Token { span, kind });
     }
 
     pub fn build(self) -> (Tree<Kind>, Node<Kind>) {
@@ -80,7 +104,14 @@ impl<Kind> Builder<Kind> {
     }
 }
 
-pub struct Checkpoint;
+#[derive(Clone, Copy)]
+pub struct Checkpoint(Index);
+
+enum Event<Kind> {
+    Open { kind: Kind },
+    Token { span: Span, kind: Kind },
+    Close,
+}
 
 type Index = u32;
 
