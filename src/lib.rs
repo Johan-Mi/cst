@@ -92,12 +92,14 @@ impl<Kind> Default for Builder<Kind> {
 }
 
 impl<Kind> Builder<Kind> {
+    /// The span is expanded as child nodes are added.
+    ///
     /// # Panics
     ///
     /// Panics if the tree is too large.
-    pub fn start_node(&mut self, kind: Kind) {
+    pub fn start_node(&mut self, kind: Kind, initial_span: Span) {
         assert!(self.events.len() < usize(Index::MAX));
-        self.events.push(Event::Open { kind });
+        self.events.push(Event::Open { kind, initial_span });
     }
 
     /// # Panics
@@ -108,12 +110,15 @@ impl<Kind> Builder<Kind> {
         self.events.push(Event::Close);
     }
 
-    pub fn checkpoint(&self) -> Checkpoint {
+    pub fn checkpoint(&self, initial_span: Span) -> Checkpoint {
         #[expect(
             clippy::missing_panics_doc,
             reason = "length is checked when pushing events"
         )]
-        Checkpoint(self.events.len().try_into().unwrap())
+        Checkpoint {
+            index: self.events.len().try_into().unwrap(),
+            initial_span,
+        }
     }
 
     /// # Panics
@@ -121,8 +126,13 @@ impl<Kind> Builder<Kind> {
     /// Panics if the tree is too large.
     pub fn finish_node_at(&mut self, checkpoint: Checkpoint, kind: Kind) {
         assert!(self.events.len() < usize(Index::MAX) - 1);
-        self.events
-            .insert(usize(checkpoint.0), Event::Open { kind });
+        self.events.insert(
+            usize(checkpoint.index),
+            Event::Open {
+                kind,
+                initial_span: checkpoint.initial_span,
+            },
+        );
         self.events.push(Event::Close);
     }
 
@@ -147,11 +157,11 @@ impl<Kind> Builder<Kind> {
 
         for event in self.events {
             match event {
-                Event::Open { kind } => {
+                Event::Open { kind, initial_span } => {
                     stack.push(entries.len().try_into().unwrap());
                     entries.push(Entry {
                         kind,
-                        span: todo!(),
+                        span: initial_span,
                         end: 0, // Dummy value which gets replaced when the node is closed.
                     });
                 }
@@ -176,10 +186,13 @@ impl<Kind> Builder<Kind> {
 }
 
 #[derive(Clone, Copy)]
-pub struct Checkpoint(Index);
+pub struct Checkpoint {
+    index: Index,
+    initial_span: Span,
+}
 
 enum Event<Kind> {
-    Open { kind: Kind },
+    Open { kind: Kind, initial_span: Span },
     Token,
     Close,
 }
