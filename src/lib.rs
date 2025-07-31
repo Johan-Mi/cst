@@ -16,13 +16,15 @@ extern crate alloc;
 
 use alloc::vec::Vec;
 use codemap::Span;
-use core::ops::Range;
 
 pub struct Tree<Kind> {
-    kind: Vec<Kind>,
-    span: Vec<Span>,
-    child_indices: Vec<Range<Index>>,
-    children: Vec<Index>,
+    entries: Vec<Entry<Kind>>,
+}
+
+struct Entry<Kind> {
+    kind: Kind,
+    span: Span,
+    end: Index,
 }
 
 pub struct Node<'tree, Kind> {
@@ -43,18 +45,25 @@ impl<Kind> Node<'_, Kind> {
     where
         Kind: Copy,
     {
-        self.tree.kind[usize(self.index)]
+        self.tree.entries[usize(self.index)].kind
     }
 
     pub fn span(self) -> Span {
-        self.tree.span[usize(self.index)]
+        self.tree.entries[usize(self.index)].span
     }
 
     pub fn children(self) -> impl Iterator<Item = Self> {
         let tree = self.tree;
-        let range = &self.tree.child_indices[usize(self.index)];
-        let slice = &self.tree.children[usize(range.start)..usize(range.end)];
-        slice.iter().map(|&index| Node { index, tree })
+        let mut next = self.index + 1;
+        let end = tree.entries[usize(self.index)].end;
+        core::iter::from_fn(move || {
+            if next == end {
+                return None;
+            }
+            let index = next;
+            next = tree.entries[usize(next)].end;
+            Some(Self { index, tree })
+        })
     }
 }
 
