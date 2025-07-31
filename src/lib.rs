@@ -21,6 +21,15 @@ pub struct Tree<Kind> {
     entries: Vec<Entry<Kind>>,
 }
 
+impl<Kind> Tree<Kind> {
+    pub const fn root(&self) -> Node<Kind> {
+        Node {
+            index: 0,
+            tree: self,
+        }
+    }
+}
+
 struct Entry<Kind> {
     kind: Kind,
     span: Span,
@@ -119,7 +128,7 @@ impl<Kind> Builder<Kind> {
         self.events.push(Event::Token);
     }
 
-    pub fn build(self, tokens: &[Token<Kind>]) -> (Tree<Kind>, Node<Kind>) {
+    pub fn build(self, tokens: &[Token<Kind>]) -> Tree<Kind> {
         todo!()
     }
 }
