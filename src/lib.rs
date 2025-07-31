@@ -85,6 +85,12 @@ pub struct Builder<Kind> {
     events: Vec<Event<Kind>>,
 }
 
+impl<Kind> Default for Builder<Kind> {
+    fn default() -> Self {
+        Self { events: Vec::new() }
+    }
+}
+
 impl<Kind> Builder<Kind> {
     /// # Panics
     ///
