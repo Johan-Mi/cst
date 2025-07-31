@@ -134,8 +134,44 @@ impl<Kind> Builder<Kind> {
         self.events.push(Event::Token);
     }
 
-    pub fn build(self, tokens: &[Token<Kind>]) -> Tree<Kind> {
-        todo!()
+    /// # Panics
+    ///
+    /// Panics if the started and finished nodes do not match.
+    pub fn build(self, tokens: &[Token<Kind>]) -> Tree<Kind>
+    where
+        Kind: Copy,
+    {
+        let mut tokens = tokens.iter();
+        let mut entries = Vec::new();
+        let mut stack = Vec::new();
+
+        for event in self.events {
+            match event {
+                Event::Open { kind } => {
+                    stack.push(entries.len().try_into().unwrap());
+                    entries.push(Entry {
+                        kind,
+                        span: todo!(),
+                        end: 0, // Dummy value which gets replaced when the node is closed.
+                    });
+                }
+                Event::Token => {
+                    let Token { kind, span } = *tokens.next().unwrap();
+                    let node_span = &mut entries[usize(*stack.last().unwrap())].span;
+                    *node_span = node_span.merge(span);
+                    entries.push(Entry {
+                        kind,
+                        span,
+                        end: (entries.len() + 1).try_into().unwrap(),
+                    });
+                }
+                Event::Close => {
+                    entries[usize(stack.pop().unwrap())].end = entries.len().try_into().unwrap();
+                }
+            }
+        }
+
+        Tree { entries }
     }
 }
 
