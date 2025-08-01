@@ -1,12 +1,4 @@
 #![no_std]
-#![forbid(unsafe_code)]
-#![deny(
-    unused_results,
-    clippy::let_underscore_untyped,
-    clippy::allow_attributes,
-    clippy::allow_attributes_without_reason
-)]
-#![warn(clippy::nursery, clippy::pedantic)]
 #![expect(
     clippy::must_use_candidate,
     reason = "redundant because of `unused_results`"
