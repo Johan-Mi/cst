@@ -156,8 +156,10 @@ impl<'tokens, Kind> Builder<'tokens, Kind> {
     {
         assert!(self.tree.entries.len() < usize(Index::MAX) - 1);
         let Token { kind, span } = *self.tokens.next().unwrap();
-        let node_span = &mut self.tree.entries[*self.stack.last().unwrap()].span;
-        *node_span = node_span.merge(span);
+        for &parent in &self.stack {
+            let parent_span = &mut self.tree.entries[parent].span;
+            *parent_span = parent_span.merge(span);
+        }
         let size = 1;
         self.tree.entries.push(Entry { kind, span, size });
     }
