@@ -181,8 +181,6 @@ pub struct Checkpoint {
 type Index = u32;
 
 const fn usize(index: Index) -> usize {
-    const {
-        assert!(size_of::<Index>() <= size_of::<usize>());
-    }
+    const { assert!(size_of::<Index>() <= size_of::<usize>()) }
     index as usize
 }
