@@ -81,17 +81,19 @@ pub struct Token<Kind> {
     pub span: Span,
 }
 
-pub struct Builder<Kind> {
+pub struct Builder<'tokens, Kind> {
     events: Vec<Event<Kind>>,
+    tokens: core::slice::Iter<'tokens, Token<Kind>>,
 }
 
-impl<Kind> Default for Builder<Kind> {
-    fn default() -> Self {
-        Self { events: Vec::new() }
+impl<'tokens, Kind> Builder<'tokens, Kind> {
+    pub fn new(tokens: &'tokens [Token<Kind>]) -> Self {
+        Self {
+            events: Vec::new(),
+            tokens: tokens.iter(),
+        }
     }
-}
 
-impl<Kind> Builder<Kind> {
     /// The span is expanded as child nodes are added.
     ///
     /// # Panics
@@ -147,11 +149,10 @@ impl<Kind> Builder<Kind> {
     /// # Panics
     ///
     /// Panics if the started and finished nodes do not match.
-    pub fn build(self, tokens: &[Token<Kind>]) -> Tree<Kind>
+    pub fn build(mut self) -> Tree<Kind>
     where
         Kind: Copy,
     {
-        let mut tokens = tokens.iter();
         let mut entries = Vec::new();
         let mut stack = Vec::new();
 
@@ -166,7 +167,7 @@ impl<Kind> Builder<Kind> {
                     });
                 }
                 Event::Token => {
-                    let Token { kind, span } = *tokens.next().unwrap();
+                    let Token { kind, span } = *self.tokens.next().unwrap();
                     let node_span = &mut entries[usize(*stack.last().unwrap())].span;
                     *node_span = node_span.merge(span);
                     entries.push(Entry {
