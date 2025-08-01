@@ -84,6 +84,7 @@ pub struct Token<Kind> {
 pub struct Builder<'tokens, Kind> {
     events: Vec<Event<Kind>>,
     tokens: core::slice::Iter<'tokens, Token<Kind>>,
+    stack: Vec<Index>,
 }
 
 impl<'tokens, Kind> Builder<'tokens, Kind> {
@@ -91,6 +92,7 @@ impl<'tokens, Kind> Builder<'tokens, Kind> {
         Self {
             events: Vec::new(),
             tokens: tokens.iter(),
+            stack: Vec::new(),
         }
     }
 
@@ -154,12 +156,11 @@ impl<'tokens, Kind> Builder<'tokens, Kind> {
         Kind: Copy,
     {
         let mut entries = Vec::new();
-        let mut stack = Vec::new();
 
         for event in self.events {
             match event {
                 Event::Open { kind, initial_span } => {
-                    stack.push(entries.len().try_into().unwrap());
+                    self.stack.push(entries.len().try_into().unwrap());
                     entries.push(Entry {
                         kind,
                         span: initial_span,
@@ -168,7 +169,7 @@ impl<'tokens, Kind> Builder<'tokens, Kind> {
                 }
                 Event::Token => {
                     let Token { kind, span } = *self.tokens.next().unwrap();
-                    let node_span = &mut entries[usize(*stack.last().unwrap())].span;
+                    let node_span = &mut entries[usize(*self.stack.last().unwrap())].span;
                     *node_span = node_span.merge(span);
                     entries.push(Entry {
                         kind,
@@ -177,7 +178,8 @@ impl<'tokens, Kind> Builder<'tokens, Kind> {
                     });
                 }
                 Event::Close => {
-                    entries[usize(stack.pop().unwrap())].end = entries.len().try_into().unwrap();
+                    entries[usize(self.stack.pop().unwrap())].end =
+                        entries.len().try_into().unwrap();
                 }
             }
         }
