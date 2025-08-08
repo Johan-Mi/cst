@@ -72,23 +72,16 @@ impl<Kind> Node<'_, Kind> {
     }
 }
 
-pub struct Token<Kind> {
-    pub kind: Kind,
-    pub span: Span,
-}
-
-pub struct Builder<'tokens, Kind> {
+pub struct Builder<Kind> {
     tree: Tree<Kind>,
-    tokens: core::slice::Iter<'tokens, Token<Kind>>,
     stack: Vec<usize>,
 }
 
-impl<'tokens, Kind> Builder<'tokens, Kind> {
-    pub fn new(tokens: &'tokens [Token<Kind>]) -> Self {
+impl<Kind> Builder<Kind> {
+    pub fn new() -> Self {
         let entries = Vec::new();
         Self {
             tree: Tree { entries },
-            tokens: tokens.iter(),
             stack: Vec::new(),
         }
     }
@@ -150,12 +143,8 @@ impl<'tokens, Kind> Builder<'tokens, Kind> {
     /// # Panics
     ///
     /// Panics if the tree is too large.
-    pub fn token(&mut self)
-    where
-        Kind: Copy,
-    {
+    pub fn token(&mut self, kind: Kind, span: Span) {
         assert!(self.tree.entries.len() < usize(Index::MAX) - 1);
-        let Token { kind, span } = *self.tokens.next().unwrap();
         for &parent in &self.stack {
             let parent_span = &mut self.tree.entries[parent].span;
             *parent_span = parent_span.merge(span);
