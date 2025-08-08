@@ -77,15 +77,17 @@ pub struct Builder<Kind> {
     stack: Vec<usize>,
 }
 
-impl<Kind> Builder<Kind> {
-    pub fn new() -> Self {
+impl<Kind> Default for Builder<Kind> {
+    fn default() -> Self {
         let entries = Vec::new();
         Self {
             tree: Tree { entries },
             stack: Vec::new(),
         }
     }
+}
 
+impl<Kind> Builder<Kind> {
     /// The span is expanded as child nodes are added.
     ///
     /// # Panics
