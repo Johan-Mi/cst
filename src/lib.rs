@@ -169,8 +169,7 @@ impl<'tokens, Kind> Builder<'tokens, Kind> {
     /// Panics if there are unfinished nodes.
     pub fn build(self) -> Tree<Kind> {
         assert!(self.stack.is_empty());
-        let entries = self.tree.entries;
-        Tree { entries }
+        self.tree
     }
 }
 
