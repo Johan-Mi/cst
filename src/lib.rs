@@ -65,6 +65,12 @@ impl<Kind> Node<'_, Kind> {
         let tree = self.tree;
         tree.children(self.index).map(|index| Self { index, tree })
     }
+
+    pub fn pre_order(self) -> impl Iterator<Item = Self> {
+        let tree = self.tree;
+        let count = tree.entries[usize(self.index)].size;
+        (self.index..(self.index + count)).map(|index| Self { index, tree })
+    }
 }
 
 pub struct Builder<Kind> {
