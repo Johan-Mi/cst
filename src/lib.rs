@@ -21,7 +21,7 @@ impl<Kind> Tree<Kind> {
         }
     }
 
-    pub fn children(&self, parent: Index) -> impl Iterator<Item = Index> {
+    fn children(&self, parent: Index) -> impl Iterator<Item = Index> {
         let end = parent + self.entries[usize(parent)].size;
         core::iter::successors(Some(parent + 1), |&it| {
             Some(it + self.entries[usize(it)].size)
