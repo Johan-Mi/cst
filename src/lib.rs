@@ -22,11 +22,16 @@ impl<Kind> Tree<Kind> {
     }
 
     fn children(&self, parent: Index) -> impl Iterator<Item = Index> {
+        let mut next = parent + 1;
         let end = parent + self.entries[usize(parent)].size;
-        core::iter::successors(Some(parent + 1), |&it| {
-            Some(it + self.entries[usize(it)].size)
+        core::iter::from_fn(move || {
+            if next == end {
+                return None;
+            }
+            let child = next;
+            next += self.entries[usize(next)].size;
+            Some(child)
         })
-        .take_while(move |&it| it != end)
     }
 }
 
