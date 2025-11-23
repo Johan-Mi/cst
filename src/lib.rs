@@ -27,12 +27,7 @@ impl<Kind> Tree<Kind> {
         let mut next = parent + 1;
         let end = parent + self.sizes[usize(parent)];
         core::iter::from_fn(move || {
-            if next == end {
-                return None;
-            }
-            let child = next;
-            next += self.sizes[usize(next)];
-            Some(child)
+            (next != end).then(|| (next, next += self.sizes[usize(next)]).0)
         })
     }
 }
