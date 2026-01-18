@@ -17,10 +17,8 @@ pub struct Tree<Kind> {
 
 impl<Kind> Tree<Kind> {
     pub const fn root(&self) -> Node<'_, Kind> {
-        Node {
-            index: 0,
-            tree: self,
-        }
+        let tree = self;
+        Node { index: 0, tree }
     }
 
     fn children(&self, parent: Index) -> impl Iterator<Item = Index> {
