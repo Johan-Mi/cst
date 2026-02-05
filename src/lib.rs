@@ -128,11 +128,6 @@ impl<Kind> Builder<Kind> {
         self.tree.spans.insert(index, checkpoint.initial_span);
         let size = Index::try_from(self.tree.kinds.len()).unwrap() - checkpoint.index + 1;
         self.tree.sizes.insert(index, size);
-        let mut span = checkpoint.initial_span;
-        for child in self.tree.children(checkpoint.index) {
-            span = span.merge(self.tree.spans[usize(child)]);
-        }
-        self.tree.spans[usize(checkpoint.index)] = span;
     }
 
     /// # Panics
@@ -140,10 +135,6 @@ impl<Kind> Builder<Kind> {
     /// Panics if the tree is too large.
     pub fn token(&mut self, kind: Kind, span: Span) {
         assert!(self.tree.kinds.len() < usize(Index::MAX) - 1);
-        for &parent in &self.stack {
-            let parent_span = &mut self.tree.spans[parent];
-            *parent_span = parent_span.merge(span);
-        }
         self.tree.kinds.push(kind);
         self.tree.spans.push(span);
         self.tree.sizes.push(1);
@@ -154,7 +145,11 @@ impl<Kind> Builder<Kind> {
     /// Panics if there are unfinished nodes.
     pub fn build(self) -> Tree<Kind> {
         assert!(self.stack.is_empty());
-        self.tree
+        let mut tree = self.tree;
+        for i in (0..tree.spans.len()).rev().filter(|&i| tree.sizes[i] != 1) {
+            tree.spans[i] = tree.spans[i + 1].merge(tree.spans[i + usize(tree.sizes[i]) - 1]);
+        }
+        tree
     }
 }
 
