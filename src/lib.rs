@@ -61,8 +61,7 @@ impl<Kind> Node<'_, Kind> {
     }
 
     pub fn pre_order(self) -> impl Iterator<Item = Self> {
-        let tree = self.tree;
-        let count = tree.sizes[usize(self.index)];
+        let (tree, count) = (self.tree, self.tree.sizes[usize(self.index)]);
         (self.index..self.index + count).map(|index| Self { index, tree })
     }
 }
