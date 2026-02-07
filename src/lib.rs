@@ -20,14 +20,6 @@ impl<Kind> Tree<Kind> {
         let tree = self;
         Node { index: 0, tree }
     }
-
-    fn children(&self, parent: Index) -> impl Iterator<Item = Index> {
-        let mut next = parent + 1;
-        let end = parent + self.sizes[usize(parent)];
-        core::iter::from_fn(move || {
-            (next != end).then(|| (next, next += self.sizes[usize(next)]).0)
-        })
-    }
 }
 
 pub struct Node<'tree, Kind> {
@@ -56,8 +48,10 @@ impl<Kind> Node<'_, Kind> {
     }
 
     pub fn children(self) -> impl Iterator<Item = Self> {
-        let tree = self.tree;
-        tree.children(self.index).map(|index| Self { index, tree })
+        let (tree, mut next) = (self.tree, self.index + 1);
+        let end = self.index + tree.sizes[usize(self.index)];
+        let iter = move || (next != end).then(|| (next, next += tree.sizes[usize(next)]).0);
+        core::iter::from_fn(iter).map(|index| Self { index, tree })
     }
 
     pub fn pre_order(self) -> impl Iterator<Item = Self> {
