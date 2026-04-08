@@ -58,6 +58,22 @@ impl<Kind> Node<'_, Kind> {
         let (tree, count) = (self.tree, self.tree.sizes[usize(self.index)]);
         (self.index..self.index + count).map(|index| Self { index, tree })
     }
+
+    pub const fn unmanaged(self) -> NodeUnmanaged {
+        NodeUnmanaged { index: self.index }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct NodeUnmanaged {
+    index: Index,
+}
+
+impl NodeUnmanaged {
+    pub const fn managed<Kind>(self, tree: &Tree<Kind>) -> Node<'_, Kind> {
+        let index = self.index;
+        Node { index, tree }
+    }
 }
 
 pub struct Builder<Kind> {
