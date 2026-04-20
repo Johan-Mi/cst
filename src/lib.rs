@@ -135,7 +135,7 @@ impl<Kind> Builder<Kind> {
         let index = usize(checkpoint.index);
         self.tree.kinds.insert(index, kind);
         self.tree.spans.insert(index, checkpoint.initial_span);
-        let size = Index::try_from(self.tree.kinds.len()).unwrap() - checkpoint.index + 1;
+        let size = Index::try_from(self.tree.kinds.len()).unwrap() - checkpoint.index;
         self.tree.sizes.insert(index, size);
     }
 
