@@ -9,6 +9,7 @@ rust.unused_results = "deny"
 clippy.let_underscore_untyped = "deny"
 clippy.allow_attributes = "deny"
 clippy.allow_attributes_without_reason = "deny"
+clippy.shadow_unrelated = "deny"
 clippy.nursery = { level = "warn", priority = -1 }
 clippy.pedantic = { level = "warn", priority = -1 }
 
